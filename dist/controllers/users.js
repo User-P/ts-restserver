@@ -16,32 +16,47 @@ exports.deleteUser = exports.putUser = exports.postUser = exports.getUser = expo
 const user_1 = __importDefault(require("../models/user"));
 const getUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const users = yield user_1.default.findAll();
-    res.send(users);
+    res.json({ users });
 });
 exports.getUsers = getUsers;
 const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield user_1.default.findByPk(req.params.id);
-    res.send(user);
+    user ? res.json(user) : res.status(404).json({ message: "User not found" });
 });
 exports.getUser = getUser;
 const postUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // const user = new User(req.body);
-    // await user.save();
-    // res.send(user);
+    const { body } = req;
+    try {
+        const userExist = yield user_1.default.findOne({ where: { email: body.email } });
+        if (userExist)
+            return res.status(400).json({ message: "User already exists" });
+        yield user_1.default.create(body);
+        res.json({ message: "User created successfully" });
+    }
+    catch (error) {
+        res.status(400).json({ message: error.message });
+    }
 });
 exports.postUser = postUser;
 const putUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
-    // const user = await User.findByIdAndUpdate(id, req.body, {
-    //     new: true
-    // });
-    // res.send(user);
+    const { body } = req;
+    try {
+        const user = yield user_1.default.findByPk(id);
+        if (!user)
+            return res.status(404).json({ message: "User not found" });
+        yield user.update(body);
+        res.json({ message: "User updated successfully" });
+    }
+    catch (error) {
+        res.status(400).json({ message: error.message });
+    }
 });
 exports.putUser = putUser;
 const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
-    // await User.findByIdAndRemove(id);
-    res.send('User deleted');
+    yield user_1.default.destroy({ where: { id } });
+    res.json({ message: "User deleted successfully" });
 });
 exports.deleteUser = deleteUser;
 //# sourceMappingURL=users.js.map
